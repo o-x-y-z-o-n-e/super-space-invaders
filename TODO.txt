@@ -1,0 +1,32 @@
+==== Player ====
+- Nice movement
+- Scene boundaries
+- Spawning lasers
+- Health + destruction
+
+==== Enemy ====
+- Wave system
+- Pattern movement
+- Health + destruction
+- Shooting
+
+==== Level ====
+- Progression
+- Entry sequence
+- Finish sequence
+
+==== Projectile ====
+- Box detection
+- Applying damage
+- Destruction FX (animation + audio)
+
+==== GUI ====
+- View system
+- Main menu
+- Settings menu
+- Credits menu
+- Level menu
+- HUD
+
+==== Extra ====
+- Zig port for cSFXr

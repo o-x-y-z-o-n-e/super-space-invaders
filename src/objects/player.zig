@@ -21,85 +21,114 @@ const textures = struct {
 position: rl.Vector2,
 model_variant: u32,
 color_variant: u32,
+health_max: u32,
+health: u32,
+attack_cooldown: f32,
+attack_interval: f32,
 
 pub fn init() !player {
-	if(textures.ship1Blue == null) textures.ship1Blue = try rl.loadTexture("res/pack1/PNG/playerShip1_blue.png");
-	if(textures.ship1Green == null) textures.ship1Green = try rl.loadTexture("res/pack1/PNG/playerShip1_green.png");
-	if(textures.ship1Orange == null) textures.ship1Orange = try rl.loadTexture("res/pack1/PNG/playerShip1_orange.png");
-	if(textures.ship1Red == null) textures.ship1Red = try rl.loadTexture("res/pack1/PNG/playerShip1_red.png");
-	if(textures.ship2Blue == null) textures.ship2Blue = try rl.loadTexture("res/pack1/PNG/playerShip2_blue.png");
-	if(textures.ship2Green == null) textures.ship2Green = try rl.loadTexture("res/pack1/PNG/playerShip2_green.png");
-	if(textures.ship2Orange == null) textures.ship2Orange = try rl.loadTexture("res/pack1/PNG/playerShip2_orange.png");
-	if(textures.ship2Red == null) textures.ship2Red = try rl.loadTexture("res/pack1/PNG/playerShip2_red.png");
-	if(textures.ship3Blue == null) textures.ship3Blue = try rl.loadTexture("res/pack1/PNG/playerShip3_blue.png");
-	if(textures.ship3Green == null) textures.ship3Green = try rl.loadTexture("res/pack1/PNG/playerShip3_green.png");
-	if(textures.ship3Orange == null) textures.ship3Orange = try rl.loadTexture("res/pack1/PNG/playerShip3_orange.png");
-	if(textures.ship3Red == null) textures.ship3Red = try rl.loadTexture("res/pack1/PNG/playerShip3_red.png");
+	if(textures.ship1Blue == null) textures.ship1Blue = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip1_blue.png");
+	if(textures.ship1Green == null) textures.ship1Green = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip1_green.png");
+	if(textures.ship1Orange == null) textures.ship1Orange = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip1_orange.png");
+	if(textures.ship1Red == null) textures.ship1Red = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip1_red.png");
+	if(textures.ship2Blue == null) textures.ship2Blue = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip2_blue.png");
+	if(textures.ship2Green == null) textures.ship2Green = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip2_green.png");
+	if(textures.ship2Orange == null) textures.ship2Orange = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip2_orange.png");
+	if(textures.ship2Red == null) textures.ship2Red = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip2_red.png");
+	if(textures.ship3Blue == null) textures.ship3Blue = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip3_blue.png");
+	if(textures.ship3Green == null) textures.ship3Green = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip3_green.png");
+	if(textures.ship3Orange == null) textures.ship3Orange = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip3_orange.png");
+	if(textures.ship3Red == null) textures.ship3Red = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip3_red.png");
 
 	return player{
 		.position = rl.Vector2.init(0.0, 0.0),
 		.model_variant = 1,
 		.color_variant = 3,
+		.health_max = 100,
+		.health = 100,
+		.attack_cooldown = 0.0,
+		.attack_interval = 0.3,
 	};
 }
 
 pub fn update(self: *player, dt: f32) void {
 	var move_input = rl.Vector2.init(0.0, 0.0);
 	const speed = 128.0;
-	if(rl.isKeyDown(.s)) {
+
+	// TODO: nice movement
+
+	if(rl.isKeyDown(.s) or rl.isKeyDown(.down)) {
 		move_input.y = 1;
 	}
-	if(rl.isKeyDown(.w)) {
+	if(rl.isKeyDown(.w) or rl.isKeyDown(.up)) {
 		move_input.y = -1;
 	}
-	if(rl.isKeyDown(.d)) {
+	if(rl.isKeyDown(.d) or rl.isKeyDown(.right)) {
 		move_input.x = 1;
 	}
-	if(rl.isKeyDown(.a)) {
+	if(rl.isKeyDown(.a) or rl.isKeyDown(.left)) {
 		move_input.x = -1;
 	}
 	move_input.x *= dt * speed;
 	move_input.y *= dt * speed;
 	self.move(move_input);
-}
 
-pub fn move(self: ?*player, delta: rl.Vector2) void {
-	if(self) | s | {
-		s.*.position = rl.Vector2.add(s.*.position, delta);
-	}
-}
-
-pub fn draw(self: ?*player) void {
-	if(self) | s | {
-		const x = @as(i32, @intFromFloat(s.*.position.x));
-		const y = @as(i32, @intFromFloat(s.*.position.y));
-		const tint = rl.Color.white;
-		const model = s.*.model_variant;
-		const color = s.*.color_variant;
-		switch(model) {
-			0 => switch(color) {
-				0 => { rl.drawTexture(textures.ship1Blue.?, x, y, tint); },
-				1 => { rl.drawTexture(textures.ship1Green.?, x, y, tint); },
-				2 => { rl.drawTexture(textures.ship1Orange.?, x, y, tint); },
-				3 => { rl.drawTexture(textures.ship1Red.?, x, y, tint); },
-				else => {}
-			},
-			1 => switch(color) {
-				0 => { rl.drawTexture(textures.ship2Blue.?, x, y, tint); },
-				1 => { rl.drawTexture(textures.ship2Green.?, x, y, tint); },
-				2 => { rl.drawTexture(textures.ship2Orange.?, x, y, tint); },
-				3 => { rl.drawTexture(textures.ship2Red.?, x, y, tint); },
-				else => {}
-			},
-			2 => switch(color) {
-				0 => { rl.drawTexture(textures.ship3Blue.?, x, y, tint); },
-				1 => { rl.drawTexture(textures.ship3Green.?, x, y, tint); },
-				2 => { rl.drawTexture(textures.ship3Orange.?, x, y, tint); },
-				3 => { rl.drawTexture(textures.ship3Red.?, x, y, tint); },
-				else => {}
-			},
-			else => {}
+	if(self.attack_cooldown > 0.0) {
+		self.attack_cooldown -= dt;
+		if(self.attack_cooldown <= 0.0) {
+			self.attack_cooldown = 0.0;
 		}
-		
 	}
+
+	if(rl.isKeyDown(.space)) {
+		self.shoot();
+	}
+}
+
+pub fn draw(self: *player) void {
+	const model = self.model_variant;
+	const color = self.color_variant;
+	const texture: ?rl.Texture2D = switch(model) {
+		0 => switch(color) {
+			0 => textures.ship1Blue,
+			1 => textures.ship1Green,
+			2 => textures.ship1Orange,
+			3 => textures.ship1Red,
+			else => null
+		},
+		1 => switch(color) {
+			0 => textures.ship2Blue,
+			1 => textures.ship2Green,
+			2 => textures.ship2Orange,
+			3 => textures.ship2Red,
+			else => null
+		},
+		2 => switch(color) {
+			0 => textures.ship3Blue,
+			1 => textures.ship3Green,
+			2 => textures.ship3Orange,
+			3 => textures.ship3Red,
+			else => null
+		},
+		else => null
+	};
+	const w = @as(f32, @floatFromInt(texture.?.width));
+	const h = @as(f32, @floatFromInt(texture.?.height));
+	const source = rl.Rectangle.init(0.0, 0.0, w, h);
+	const destination = rl.Rectangle.init(self.position.x, self.position.y, w / 2.0, h / 2.0);
+	const origin = rl.Vector2.init(destination.width / 2.0, destination.height / 4.0);
+	rl.drawTexturePro(texture.?, source, destination, origin, 0.0, rl.Color.white);
+}
+
+fn move(self: *player, delta: rl.Vector2) void {
+	self.position = rl.Vector2.add(self.position, delta);
+}
+
+fn shoot(self: *player) void {
+	if(self.attack_cooldown > 0.0) return;
+
+	self.attack_cooldown = self.attack_interval;
+
+	// TODO: ceate projectile
+	// TODO: sfx
 }
