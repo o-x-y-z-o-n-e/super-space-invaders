@@ -45,8 +45,8 @@ pub fn init() !player {
 	if(textures.ship3Red == null) textures.ship3Red = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip3_red.png");
 
 	return player{
-		.max_speed = 10.0,
-		.acceleration = 10.0,
+		.max_speed = 600.0,
+		.acceleration = 600.0,
 		.velocity = rl.Vector2.init(0.0, 0.0),
 		.position = rl.Vector2.init(0.0, 0.0),
 		.model_variant = 1,
@@ -59,41 +59,8 @@ pub fn init() !player {
 }
 
 pub fn update(self: *player, dt: f32) void {
-	var move_input = rl.Vector2.init(0.0, 0.0);
-
-	if(rl.isKeyDown(.s) or rl.isKeyDown(.down)) {
-		move_input.y = 1;
-	}
-	if(rl.isKeyDown(.w) or rl.isKeyDown(.up)) {
-		move_input.y = -1;
-	}
-	if(rl.isKeyDown(.d) or rl.isKeyDown(.right)) {
-		move_input.x = 1;
-	}
-	if(rl.isKeyDown(.a) or rl.isKeyDown(.left)) {
-		move_input.x = -1;
-	}
-
-	var target_velocity = rl.Vector2.init(move_input.x, move_input.y);
-	target_velocity = rl.Vector2.scale(target_velocity, self.max_speed);
-
-	self.velocity = rl.Vector2.moveTowards(self.velocity, target_velocity, dt * self.acceleration);
-
-	self.move(self.velocity);
-
-	if(self.position.x < 0.0) {
-		self.position.x = 0.0;
-	}
-	if(self.position.y < 0.0) {
-		self.position.y = 0.0;
-	}
-
-	if(self.position.x > @as(f32, @floatFromInt(ssi.game.getWidth()))) {
-		self.position.x = @as(f32, @floatFromInt(ssi.game.getWidth()));
-	}
-	if(self.position.y > @as(f32, @floatFromInt(ssi.game.getHeight()))) {
-		self.position.y = @as(f32, @floatFromInt(ssi.game.getHeight()));
-	}
+	
+	move(self, dt);
 
 	if(self.attack_cooldown > 0.0) {
 		self.attack_cooldown -= dt;
@@ -101,16 +68,15 @@ pub fn update(self: *player, dt: f32) void {
 			self.attack_cooldown = 0.0;
 		}
 	}
-
 	if(rl.isKeyDown(.space)) {
 		self.shoot();
 	}
 }
 
-pub fn draw(self: *player) void {
+fn getTexture(self: *player) ?rl.Texture2D {
 	const model = self.model_variant;
 	const color = self.color_variant;
-	const texture: ?rl.Texture2D = switch(model) {
+	return switch(model) {
 		0 => switch(color) {
 			0 => textures.ship1Blue,
 			1 => textures.ship1Green,
@@ -134,16 +100,84 @@ pub fn draw(self: *player) void {
 		},
 		else => null
 	};
-	const w = @as(f32, @floatFromInt(texture.?.width));
-	const h = @as(f32, @floatFromInt(texture.?.height));
-	const source = rl.Rectangle.init(0.0, 0.0, w, h);
-	const destination = rl.Rectangle.init(self.position.x, self.position.y, w / 2.0, h / 2.0);
-	const origin = rl.Vector2.init(destination.width / 2.0, destination.height / 4.0);
-	rl.drawTexturePro(texture.?, source, destination, origin, 0.0, rl.Color.white);
 }
 
-fn move(self: *player, delta: rl.Vector2) void {
-	self.position = rl.Vector2.add(self.position, delta);
+fn getSize(self: *player) rl.Vector2 {
+	const texture = getTexture(self);
+	return rl.Vector2.init(
+		@as(f32, @floatFromInt(texture.?.width)),
+		@as(f32, @floatFromInt(texture.?.height))
+	).scale(0.5);
+}
+
+pub fn draw(self: *player) void {
+	const size = getSize(self);
+	const texture = getTexture(self);
+	const source = rl.Rectangle.init(
+		0.0,
+		0.0,
+		@as(f32, @floatFromInt(texture.?.width)),
+		@as(f32, @floatFromInt(texture.?.height))
+	);
+	const destination = rl.Rectangle.init(
+		self.position.x,
+		self.position.y,
+		size.x - (@abs(self.velocity.x) / self.max_speed) * 16,
+		size.y
+	);
+	const origin = rl.Vector2.init(
+		destination.width / 2.0,
+		destination.height / 2.0
+	);
+
+	rl.drawTexturePro(texture.?, source, destination, origin, 0.0, .white);
+}
+
+fn move(self: *player, dt: f32) void {
+	var move_input = rl.Vector2.init(0.0, 0.0);
+
+	if(rl.isKeyDown(.s) or rl.isKeyDown(.down)) {
+		move_input.y = 1;
+	}
+	if(rl.isKeyDown(.w) or rl.isKeyDown(.up)) {
+		move_input.y = -1;
+	}
+	if(rl.isKeyDown(.d) or rl.isKeyDown(.right)) {
+		move_input.x = 1;
+	}
+	if(rl.isKeyDown(.a) or rl.isKeyDown(.left)) {
+		move_input.x = -1;
+	}
+
+	var target_velocity = rl.Vector2.init(move_input.x, move_input.y);
+	target_velocity = rl.Vector2.scale(target_velocity, self.max_speed);
+
+	self.velocity = rl.Vector2.moveTowards(self.velocity, target_velocity, dt * self.acceleration);
+	self.position = rl.Vector2.add(self.position, self.velocity.scale(dt));
+
+	const size = getSize(self);
+
+	const x_min = size.x / 2.0;
+	const y_min = size.y / 2.0;
+	const x_max = @as(f32, @floatFromInt(ssi.game.getWidth())) - size.x / 2.0;
+	const y_max = @as(f32, @floatFromInt(ssi.game.getHeight())) - size.y / 2.0;
+
+	if(self.position.x < x_min) {
+		self.position.x = x_min;
+		self.velocity.x = 0.0;
+	}
+	if(self.position.y < y_min) {
+		self.position.y = y_min;
+		self.velocity.y = 0.0;
+	}
+	if(self.position.x > x_max) {
+		self.position.x = x_max;
+		self.velocity.x = 0.0;
+	}
+	if(self.position.y > y_max) {
+		self.position.y = y_max;
+		self.velocity.y = 0.0;
+	}
 }
 
 fn shoot(self: *player) void {
@@ -151,6 +185,6 @@ fn shoot(self: *player) void {
 
 	self.attack_cooldown = self.attack_interval;
 
-	// TODO: ceate projectile
+	// TODO: create projectile
 	// TODO: sfx
 }
