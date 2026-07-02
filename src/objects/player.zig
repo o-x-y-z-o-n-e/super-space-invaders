@@ -1,5 +1,6 @@
 const std = @import("std");
 const rl = @import("raylib");
+const ssi = @import("../ssi.zig");
 
 const player = @This();
 
@@ -18,6 +19,9 @@ const textures = struct {
 	var ship3Red: ?rl.Texture2D = null;
 };
 
+max_speed: f32,
+acceleration: f32,
+velocity: rl.Vector2,
 position: rl.Vector2,
 model_variant: u32,
 color_variant: u32,
@@ -41,6 +45,9 @@ pub fn init() !player {
 	if(textures.ship3Red == null) textures.ship3Red = try rl.loadTexture("res/kenney_space-shooter-remastered/PNG/playerShip3_red.png");
 
 	return player{
+		.max_speed = 10.0,
+		.acceleration = 10.0,
+		.velocity = rl.Vector2.init(0.0, 0.0),
 		.position = rl.Vector2.init(0.0, 0.0),
 		.model_variant = 1,
 		.color_variant = 3,
@@ -53,9 +60,6 @@ pub fn init() !player {
 
 pub fn update(self: *player, dt: f32) void {
 	var move_input = rl.Vector2.init(0.0, 0.0);
-	const speed = 128.0;
-
-	// TODO: nice movement
 
 	if(rl.isKeyDown(.s) or rl.isKeyDown(.down)) {
 		move_input.y = 1;
@@ -69,9 +73,27 @@ pub fn update(self: *player, dt: f32) void {
 	if(rl.isKeyDown(.a) or rl.isKeyDown(.left)) {
 		move_input.x = -1;
 	}
-	move_input.x *= dt * speed;
-	move_input.y *= dt * speed;
-	self.move(move_input);
+
+	var target_velocity = rl.Vector2.init(move_input.x, move_input.y);
+	target_velocity = rl.Vector2.scale(target_velocity, self.max_speed);
+
+	self.velocity = rl.Vector2.moveTowards(self.velocity, target_velocity, dt * self.acceleration);
+
+	self.move(self.velocity);
+
+	if(self.position.x < 0.0) {
+		self.position.x = 0.0;
+	}
+	if(self.position.y < 0.0) {
+		self.position.y = 0.0;
+	}
+
+	if(self.position.x > @as(f32, @floatFromInt(ssi.game.getWidth()))) {
+		self.position.x = @as(f32, @floatFromInt(ssi.game.getWidth()));
+	}
+	if(self.position.y > @as(f32, @floatFromInt(ssi.game.getHeight()))) {
+		self.position.y = @as(f32, @floatFromInt(ssi.game.getHeight()));
+	}
 
 	if(self.attack_cooldown > 0.0) {
 		self.attack_cooldown -= dt;
