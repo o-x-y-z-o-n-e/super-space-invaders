@@ -1,6 +1,6 @@
 const std = @import("std");
 const rl = @import("raylib");
-const ssi = @import("ssi.zig");
+const ssi = @import("root");
 
 const level = @This();
 

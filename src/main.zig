@@ -1,6 +1,11 @@
 const std = @import("std");
 const rl = @import("raylib");
-const ssi = @import("ssi.zig");
+const ssi = @import("root");
+
+pub const game = @import("game.zig");
+pub const level = @import("level.zig");
+pub const player = @import("objects/player.zig");
+pub const projectile = @import("objects/projectile.zig");
 
 pub fn main() !void {
     rl.initWindow(800, 600, "Super Space Invaders");
